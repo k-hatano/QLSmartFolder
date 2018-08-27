@@ -7,5 +7,6 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <CoreSpotlight/CoreSpotlight.h>
 
 static NSString * const kPluginBundleId = @"jp.nita.QLSmartFolder";
