@@ -5,21 +5,40 @@
         color: #333333;
         background: #F8F8F8;
     }
+img {
+    width: 64px;
+    height: 64px;
+}
 table {
     border: 1px #666666;
     font-size: small;
 }
+span.lastAccessDate {
+    font-size: small;
+}
 td {
     font-family: sans-serif;
+    padding: 1px;
 }
 td.title {
     font-weight: bold;
 }
 h2 {
     font-family: sans-serif;
+    display: inline;
 }
 </style>
-<h2>__Name_Value__</h2>
+<table>
+    <tr>
+        <td><img src="cid:icon" alt="Smart Folder Icon" />&nbsp;&nbsp;</td>
+        <td>
+            <h2>__Name_Value__</h2>
+            <br />
+            <span class="lastAccessDate">__Last_Access_Date__ : __Last_Access_Date_Value__</span>
+        </td>
+    </tr>
+</table>
+<hr />
 <table>
     <tr>
         <td class="title">
@@ -35,6 +54,14 @@ h2 {
         </td>
         <td>
             __Query_Value__
+        </td>
+    </tr>
+    <tr>
+        <td class="title">
+            __Raw_Query__
+        </td>
+        <td>
+            __Raw_Query_Value__
         </td>
     </tr>
 </table>

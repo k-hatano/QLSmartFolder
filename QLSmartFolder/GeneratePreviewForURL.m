@@ -16,70 +16,80 @@ void CancelPreviewGeneration(void *thisInterface, QLPreviewRequestRef preview);
 OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview, CFURLRef url, CFStringRef contentTypeUTI, CFDictionaryRef options)
 {
     @autoreleasepool {
+        NSURL *imgURL = [[NSBundle bundleWithIdentifier:kPluginBundleId] URLForResource:@"smartFolderIcon" withExtension:@"png"];
+        
         NSURL *htmlURL = [[NSBundle bundleWithIdentifier:kPluginBundleId] URLForResource:@"template" withExtension:@"html"];
         NSMutableString *previewHtml = [NSMutableString stringWithContentsOfURL:htmlURL encoding:NSUTF8StringEncoding error:NULL];
         
         NSURL *URL = (__bridge NSURL *)url;
         NSString *name = [[[URL absoluteString] lastPathComponent] stringByRemovingPercentEncoding];
         
+        NSDictionary *urlAttributes = [URL resourceValuesForKeys:@[NSURLContentAccessDateKey] error:NULL];
+        NSDate *lastAccessDate = urlAttributes[NSURLContentAccessDateKey];
+        
         NSString *error;
         NSPropertyListFormat format;
         NSDictionary *contentDict = [NSPropertyListSerialization propertyListWithData:[NSData dataWithContentsOfURL:URL] options:0 format:&format error:&error];
         
-        NSString *queryString = [((NSString *)contentDict[@"RawQueryDict"][@"RawQuery"]) stringByReplacingOccurrencesOfString:@"kMDItem" withString:@""];
+        NSString *rawQueryString = contentDict[@"RawQueryDict"][@"RawQuery"];
+        
+        NSMutableString *queryString = [[NSMutableString alloc] init];
         
         NSArray *criteriaSlices = contentDict[@"SearchCriteria"][@"FXCriteriaSlices"];
-        NSMutableArray *attributes = [[NSMutableArray alloc] init];
-        NSMutableDictionary *criteriaTable = [[NSMutableDictionary alloc] init];
         for (NSDictionary *criteriaSlice in criteriaSlices) {
-            NSArray *criteriaArray = (criteriaSlice[@"criteria"]);
-            NSString *originalCriteria = [((NSString *)criteriaArray[0]) stringByReplacingOccurrencesOfString:@"kMDItem" withString:@""];
-            NSString *newCriteria = [[[originalCriteria substringToIndex:1] lowercaseString] stringByAppendingString:[originalCriteria substringFromIndex:1]];
-            [attributes addObject:newCriteria];
-            
-            criteriaTable[originalCriteria] = newCriteria;
+            if ([queryString length] > 0) {
+                [queryString appendString:@"&nbsp;&amp;&nbsp;"];
+            }
+            NSArray *displayValuesArray = (criteriaSlice[@"displayValues"]);
+            NSString *displayValues = [displayValuesArray componentsJoinedByString:@" "];
+            [queryString appendString:displayValues];
         }
         
-        for (NSString *key in criteriaTable) {
-            queryString = [queryString stringByReplacingOccurrencesOfString:key withString:criteriaTable[key]];
+        NSDictionary *scopesReplacement = @{ @"kMDQueryScopeHome": @"Home",
+                                             @"kMDQueryScopeComputer": @"Computer",
+                                             @"kMDQueryScopeNetwork": @"Network",
+                                             @"kMDQueryScopeAllIndexed": @"All Indexed",
+                                             @"kMDQueryScopeComputerIndexed": @"Computer Indexed",
+                                             @"kMDQueryScopeNetworkIndexed": @"Network Indexed"
+                                             };
+        
+        NSMutableArray *scopes = contentDict[@"RawQueryDict"][@"SearchScopes"];
+        for (NSInteger i = 0; i < [scopes count]; i++) {
+            for (NSString *key in scopesReplacement) {
+                if ([scopes[i] isEqualToString:key]) {
+                    scopes[i] = scopesReplacement[key];
+                }
+            }
         }
+        
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy/MM/dd HH:mm:ss"];
+        [formatter setTimeZone:[NSTimeZone systemTimeZone]];
         
         NSMutableDictionary *previewReplacement = [[NSMutableDictionary alloc] init];
         previewReplacement[@"__Name_Value__"] = name;
+        previewReplacement[@"__Last_Access_Date__"] = @"Last Access Date";
+        previewReplacement[@"__Last_Access_Date_Value__"] = [formatter stringFromDate:lastAccessDate];
         previewReplacement[@"__Scopes__"] = @"Scopes";
-        previewReplacement[@"__Scopes_Value__"] = [(NSArray *)(contentDict[@"RawQueryDict"][@"SearchScopes"]) componentsJoinedByString:@", "];
+        previewReplacement[@"__Scopes_Value__"] = [scopes componentsJoinedByString:@", "];
         previewReplacement[@"__Query__"] = @"Query";
         previewReplacement[@"__Query_Value__"] = queryString;
+        previewReplacement[@"__Raw_Query__"] = @"Raw&nbsp;Query";
+        previewReplacement[@"__Raw_Query_Value__"] = rawQueryString;
         
-        __block NSMutableArray *foundItems = [[NSMutableArray alloc] init];
-        __block NSString *errorString = @"";
-        __block BOOL searchFinished = NO;
-        
-        CSSearchQuery *query = [[CSSearchQuery alloc] initWithQueryString:queryString attributes:attributes];
-        query.foundItemsHandler = ^(NSArray<CSSearchableItem *> * _Nonnull items) {
-            [foundItems addObjectsFromArray:items];
-        };
-        query.completionHandler = ^(NSError * _Nullable error) {
-            errorString = [error description] ?: @"";
-            searchFinished = YES;
-        };
-        [query start];
-        
-        NSInteger i = 0;
-        while ([query foundItemCount] < 10 && i < 100 && ![query isCancelled] && !searchFinished) {
-            [NSThread sleepForTimeInterval:0.1f];
-            i++;
-        }
-        
-        [previewHtml appendFormat:@"<table><tr><th>%ld Files</th></tr>", (long)[query foundItemCount]];
-        for (CSSearchableItem *item in foundItems) {
-            [previewHtml appendFormat:@"<table><tr><td>%@</td></tr>", [item uniqueIdentifier]];
-        }
         [previewHtml appendString:@"</table>"];
-        [previewHtml appendString:errorString];
+        
+        NSData *imgData = [[NSData alloc] initWithContentsOfURL:imgURL];
         
         NSDictionary *properties = @{(__bridge NSString *)kQLPreviewPropertyTextEncodingNameKey : @"UTF-8",
-                                     (__bridge NSString *)kQLPreviewPropertyMIMETypeKey : @"text/html" };
+                                     (__bridge NSString *)kQLPreviewPropertyMIMETypeKey : @"text/html",
+                                     (__bridge NSString *)kQLPreviewPropertyAttachmentsKey : @{
+                                             @"icon" : @{
+                                                     (__bridge NSString*)kQLPreviewPropertyMIMETypeKey : @"image/png",
+                                                     (__bridge NSString*)kQLPreviewPropertyAttachmentDataKey: imgData,
+                                                     }
+                                             }
+                                     };
 
         for (NSString *key in previewReplacement) {
             [previewHtml replaceOccurrencesOfString:key
@@ -87,8 +97,6 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
                                             options:0
                                               range:NSMakeRange(0, [previewHtml length])];
         }
-        
-        [query cancel];
         
         QLPreviewRequestSetDataRepresentation(preview, (__bridge CFDataRef)[previewHtml dataUsingEncoding:NSUTF8StringEncoding], kUTTypeHTML, (__bridge CFDictionaryRef)properties);
     }

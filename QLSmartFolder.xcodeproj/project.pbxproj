@@ -7,14 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A2A823A213565AE0057AE57 /* smartFolderIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A2A8239213565AE0057AE57 /* smartFolderIcon.png */; };
 		4A8AF8DB2133B9FF00B0A97B /* GenerateThumbnailForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A8AF8DA2133B9FF00B0A97B /* GenerateThumbnailForURL.m */; };
 		4A8AF8DD2133B9FF00B0A97B /* GeneratePreviewForURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 4A8AF8DC2133B9FF00B0A97B /* GeneratePreviewForURL.m */; };
 		4A8AF8DF2133B9FF00B0A97B /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 4A8AF8DE2133B9FF00B0A97B /* main.c */; };
 		4A8AF8E92133BEF100B0A97B /* template.html in Resources */ = {isa = PBXBuildFile; fileRef = 4A8AF8E82133BEF100B0A97B /* template.html */; };
-		4ABF9B502133ED51009DEE78 /* CoreSpotlight.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ABF9B4F2133ED51009DEE78 /* CoreSpotlight.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4A2A8239213565AE0057AE57 /* smartFolderIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = smartFolderIcon.png; sourceTree = "<group>"; };
 		4A8AF8D72133B9FE00B0A97B /* QLSmartFolder.qlgenerator */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QLSmartFolder.qlgenerator; sourceTree = BUILT_PRODUCTS_DIR; };
 		4A8AF8DA2133B9FF00B0A97B /* GenerateThumbnailForURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GenerateThumbnailForURL.m; sourceTree = "<group>"; };
 		4A8AF8DC2133B9FF00B0A97B /* GeneratePreviewForURL.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GeneratePreviewForURL.m; sourceTree = "<group>"; };
@@ -22,7 +23,6 @@
 		4A8AF8E02133B9FF00B0A97B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4A8AF8E62133BB3100B0A97B /* Shared.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Shared.h; sourceTree = "<group>"; };
 		4A8AF8E82133BEF100B0A97B /* template.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = template.html; sourceTree = "<group>"; };
-		4ABF9B4F2133ED51009DEE78 /* CoreSpotlight.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreSpotlight.framework; path = System/Library/Frameworks/CoreSpotlight.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -30,7 +30,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4ABF9B502133ED51009DEE78 /* CoreSpotlight.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -42,7 +41,6 @@
 			children = (
 				4A8AF8D92133B9FE00B0A97B /* QLSmartFolder */,
 				4A8AF8D82133B9FE00B0A97B /* Products */,
-				4ABF9B4E2133ED50009DEE78 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -70,17 +68,10 @@
 		4A8AF8E72133BED800B0A97B /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4A2A8239213565AE0057AE57 /* smartFolderIcon.png */,
 				4A8AF8E82133BEF100B0A97B /* template.html */,
 			);
 			path = Resources;
-			sourceTree = "<group>";
-		};
-		4ABF9B4E2133ED50009DEE78 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				4ABF9B4F2133ED51009DEE78 /* CoreSpotlight.framework */,
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -150,6 +141,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A2A823A213565AE0057AE57 /* smartFolderIcon.png in Resources */,
 				4A8AF8E92133BEF100B0A97B /* template.html in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
