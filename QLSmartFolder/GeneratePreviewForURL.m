@@ -26,7 +26,23 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         NSPropertyListFormat format;
         NSDictionary *contentDict = [NSPropertyListSerialization propertyListWithData:[NSData dataWithContentsOfURL:URL] options:0 format:&format error:&error];
         
-        NSString *queryString = contentDict[@"RawQueryDict"][@"RawQuery"];
+        NSString *queryString = [((NSString *)contentDict[@"RawQueryDict"][@"RawQuery"]) stringByReplacingOccurrencesOfString:@"kMDItem" withString:@""];
+        
+        NSArray *criteriaSlices = contentDict[@"SearchCriteria"][@"FXCriteriaSlices"];
+        NSMutableArray *attributes = [[NSMutableArray alloc] init];
+        NSMutableDictionary *criteriaTable = [[NSMutableDictionary alloc] init];
+        for (NSDictionary *criteriaSlice in criteriaSlices) {
+            NSArray *criteriaArray = (criteriaSlice[@"criteria"]);
+            NSString *originalCriteria = [((NSString *)criteriaArray[0]) stringByReplacingOccurrencesOfString:@"kMDItem" withString:@""];
+            NSString *newCriteria = [[[originalCriteria substringToIndex:1] lowercaseString] stringByAppendingString:[originalCriteria substringFromIndex:1]];
+            [attributes addObject:newCriteria];
+            
+            criteriaTable[originalCriteria] = newCriteria;
+        }
+        
+        for (NSString *key in criteriaTable) {
+            queryString = [queryString stringByReplacingOccurrencesOfString:key withString:criteriaTable[key]];
+        }
         
         NSMutableDictionary *previewReplacement = [[NSMutableDictionary alloc] init];
         previewReplacement[@"__Name_Value__"] = name;
@@ -35,27 +51,22 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
         previewReplacement[@"__Query__"] = @"Query";
         previewReplacement[@"__Query_Value__"] = queryString;
         
-        NSArray *criteriaSlices = contentDict[@"SearchCriteria"][@"FXCriteriaSlices"];
-        NSMutableArray *attributes = [[NSMutableArray alloc] init];
-        for (NSDictionary *criteriaSlice in criteriaSlices) {
-            NSArray *criteria = criteriaSlice[@"criteria"];
-            [attributes addObject:criteria[0]];
-        }
-        
         __block NSMutableArray *foundItems = [[NSMutableArray alloc] init];
         __block NSString *errorString = @"";
+        __block BOOL searchFinished = NO;
         
         CSSearchQuery *query = [[CSSearchQuery alloc] initWithQueryString:queryString attributes:attributes];
         query.foundItemsHandler = ^(NSArray<CSSearchableItem *> * _Nonnull items) {
             [foundItems addObjectsFromArray:items];
         };
         query.completionHandler = ^(NSError * _Nullable error) {
-            errorString = [error localizedDescription] ?: @"";
+            errorString = [error description] ?: @"";
+            searchFinished = YES;
         };
         [query start];
         
         NSInteger i = 0;
-        while ([query foundItemCount] < 10 && i < 10 && ![query isCancelled]) {
+        while ([query foundItemCount] < 10 && i < 100 && ![query isCancelled] && !searchFinished) {
             [NSThread sleepForTimeInterval:0.1f];
             i++;
         }
@@ -65,7 +76,7 @@ OSStatus GeneratePreviewForURL(void *thisInterface, QLPreviewRequestRef preview,
             [previewHtml appendFormat:@"<table><tr><td>%@</td></tr>", [item uniqueIdentifier]];
         }
         [previewHtml appendString:@"</table>"];
-        [previewHtml appendString:[attributes description]];
+        [previewHtml appendString:errorString];
         
         NSDictionary *properties = @{(__bridge NSString *)kQLPreviewPropertyTextEncodingNameKey : @"UTF-8",
                                      (__bridge NSString *)kQLPreviewPropertyMIMETypeKey : @"text/html" };
